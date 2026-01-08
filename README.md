@@ -1,1 +1,1 @@
-# Polymarket-Bot
+# Polymarket-Scraper
