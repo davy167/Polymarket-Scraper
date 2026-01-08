@@ -65,11 +65,21 @@ class GammaClient:
         self.session = session
 
     def resolve_wallet(self, username: str) -> str:
+        if username.startswith("0x") and len(username) >= 40:
+            return username
         url = f"{GAMMA_BASE_URL}/public-search"
         response = self.session.get(url, params={"q": username}, timeout=10)
         response.raise_for_status()
         payload = response.json()
-        results = payload.get("results") if isinstance(payload, dict) else payload
+        if isinstance(payload, dict):
+            results = (
+                payload.get("results")
+                or payload.get("data")
+                or payload.get("users")
+                or payload.get("items")
+            )
+        else:
+            results = payload
         if not results:
             raise ValueError(f"No results found for username '{username}'")
         best = self._pick_best_match(results, username)
