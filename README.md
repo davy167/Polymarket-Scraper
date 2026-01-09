@@ -8,9 +8,23 @@ A small CLI bot that tracks a Polymarket username's activity via official APIs, 
 - `pip install -r requirements.txt`
 
 ## Usage
-
 ```bash
-python tracker.py --username <PolymarketUsername> --minutes 60 --poll 7
+python tracker.py --address 0x... --minutes 60 --poll 7 --lookback 120 --warmup 600 --out-dir data --sqlite data/events.sqlite
+```
+
+## Find Files
+```bash
+open data
+```
+
+## Inspect the SQLite DB
+```bash
+sqlite3 data/events.sqlite
+```
+
+## View the summary_snapshot.json
+```bash
+cat data/snapshot_summary.json
 ```
 
 ### Common options
@@ -22,10 +36,9 @@ python tracker.py --username <PolymarketUsername> --minutes 60 --poll 7
 - `--out-dir`: output directory for JSON files (default: `data`)
 - `--sqlite`: optional sqlite path to persist events (e.g. `data/events.sqlite`)
 
-Example:
-
+## Example (Account88888):
 ```bash
-python tracker.py --username Account88888 --minutes 60 --poll 7 --lookback 120 --warmup 600 --out-dir data --sqlite data/events.sqlite
+python tracker.py --address 0x7f69983eb28245bba0d5083502a78744a8f66162 --minutes 60 --poll 7 --lookback 120 --warmup 600 --out-dir data --sqlite data/events.sqlite
 ```
 
 ## Output files
