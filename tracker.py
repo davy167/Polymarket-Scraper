@@ -65,18 +65,56 @@ class GammaClient:
         self.session = session
 
     def resolve_wallet(self, username: str) -> str:
-        url = f"{GAMMA_BASE_URL}/public-search"
-        response = self.session.get(url, params={"q": username}, timeout=10)
-        response.raise_for_status()
-        payload = response.json()
-        results = payload.get("results") if isinstance(payload, dict) else payload
+        if username.startswith("0x") and len(username) >= 40:
+            return username
+        results = self._search_public(username)
         if not results:
-            raise ValueError(f"No results found for username '{username}'")
+            results = self._search_users(username)
+        if not results:
+            raise ValueError(
+                f"No results found for username '{username}'. "
+                "Try passing the proxy wallet address (0x...) directly."
+            )
         best = self._pick_best_match(results, username)
         for key in ("proxyWallet", "proxy_wallet", "wallet", "address"):
             if isinstance(best, dict) and best.get(key):
                 return str(best[key])
         raise ValueError("Unable to resolve proxy wallet from Gamma API response")
+
+    def _search_public(self, username: str) -> List[Dict[str, Any]]:
+        url = f"{GAMMA_BASE_URL}/public-search"
+        response = self.session.get(url, params={"q": username}, timeout=10)
+        response.raise_for_status()
+        payload = response.json()
+        return self._extract_results(payload)
+
+    def _search_users(self, username: str) -> List[Dict[str, Any]]:
+        for params in ({"username": username}, {"search": username}, {"query": username}):
+            url = f"{GAMMA_BASE_URL}/users"
+            response = self.session.get(url, params=params, timeout=10)
+            if response.status_code == 404:
+                continue
+            response.raise_for_status()
+            payload = response.json()
+            results = self._extract_results(payload)
+            if results:
+                return results
+        return []
+
+    @staticmethod
+    def _extract_results(payload: Any) -> List[Dict[str, Any]]:
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+        if isinstance(payload, dict):
+            for key in ("results", "data", "users", "items", "user"):
+                value = payload.get(key)
+                if isinstance(value, list):
+                    return [item for item in value if isinstance(item, dict)]
+                if isinstance(value, dict):
+                    return [value]
+            if "id" in payload:
+                return [payload]
+        return []
 
     @staticmethod
     def _pick_best_match(results: Iterable[Any], username: str) -> Any:

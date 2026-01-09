@@ -13,6 +13,12 @@ A small CLI bot that tracks a Polymarket username's activity via official APIs, 
 python tracker.py --username <PolymarketUsername> --minutes 60 --poll 7
 ```
 
+If you already have a proxy wallet, you can pass it directly (starts with `0x`):
+
+```bash
+python tracker.py --username 0xYourProxyWallet --minutes 60 --poll 7
+```
+
 ### Common options
 
 - `--poll`: polling interval in seconds (default: 7)
